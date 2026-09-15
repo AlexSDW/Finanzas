@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Mis Finanzas" />
+<meta name="theme-color" content="#6366f1" />
+<title>Mi Control de Gastos</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>" />
+<style>
+  :root{
+    --bg:#f4f5fb;
+    --surface:#ffffff;
+    --surface-2:#f7f7fc;
+    --border:#e6e7f0;
+    --text:#1a1b25;
+    --text-secondary:#6b6d80;
+    --text-muted:#9a9cae;
+    --accent:#6366f1;
+    --accent-light:#eef0fe;
+    --success:#12b76a;
+    --success-light:#e7f9f0;
+    --danger:#f04438;
+    --danger-light:#feeceb;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-tap-highlight-color:transparent;
+  }
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    padding:16px 16px 48px;
+    min-height:100vh;
+  }
+  h1{
+    font-size:19px;
+    font-weight:700;
+    margin:4px 0 16px;
+  }
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:16px;
+    background:var(--surface-2);
+    padding:4px;
+    border-radius:12px;
+  }
+  .tab-btn{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:9px 4px;
+    border-radius:9px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-secondary);
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background:var(--surface);
+    color:var(--accent);
+    box-shadow:0 1px 3px rgba(0,0,0,0.08);
+  }
+  .view{display:none;}
+  .view.active{display:block;}
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:14px;
+    border:1px solid var(--border);
+  }
+  .stat-label{
+    font-size:12px;
+    color:var(--text-secondary);
+    margin:0 0 4px;
+  }
+  .stat-value{
+    font-size:20px;
+    font-weight:700;
+    margin:0;
+  }
+  .stat-value.danger{color:var(--danger);}
+  .stat-value.success{color:var(--success);}
+  .stat-sub{
+    font-size:10.5px;
+    color:var(--text-muted);
+    margin:3px 0 0;
+  }
+  .row-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    margin-bottom:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .section-title{
+    font-size:14px;
+    font-weight:700;
+    margin:22px 0 10px;
+  }
+  .section-title:first-of-type{margin-top:4px;}
+  .empty-msg{
+    font-size:13px;
+    color:var(--text-muted);
+    background:var(--surface);
+    border:1px dashed var(--border);
+    border-radius:12px;
+    padding:14px;
+    text-align:center;
+  }
+  input, select{
+    width:100%;
+    font-size:15px;
+    padding:11px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    font-family:inherit;
+  }
+  input:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  label{
+    font-size:11px;
+    color:var(--text-secondary);
+    font-weight:600;
+    display:block;
+    margin-bottom:4px;
+  }
+  .field-group{margin-bottom:10px;}
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--text-secondary);
+    margin-bottom:10px;
+  }
+  .checkbox-row input{width:auto;}
+  button{
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .btn-primary{
+    width:100%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:13px;
+    font-size:15px;
+    font-weight:700;
+  }
+  .btn-primary:active{opacity:0.85;}
+  .btn-secondary{
+    width:100%;
+    background:var(--accent-light);
+    color:var(--accent);
+    border:none;
+    border-radius:10px;
+    padding:10px;
+    font-size:13px;
+    font-weight:700;
+  }
+  .type-toggle{
+    display:flex;
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .type-btn{
+    flex:1;
+    padding:11px;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    background:var(--surface);
+    font-size:14px;
+    font-weight:600;
+    color:var(--text-secondary);
+  }
+  .type-btn.gasto-active{
+    border-color:var(--danger);
+    color:var(--danger);
+    background:var(--danger-light);
+  }
+  .type-btn.ingreso-active{
+    border-color:var(--success);
+    color:var(--success);
+    background:var(--success-light);
+  }
+  .error-msg{
+    font-size:12.5px;
+    color:var(--danger);
+    margin:-4px 0 8px;
+    display:none;
+  }
+  .hint{
+    font-size:11.5px;
+    color:var(--text-muted);
+    margin:-2px 0 14px;
+    line-height:1.4;
+  }
+  .icon-btn{
+    background:none;
+    border:none;
+    color:var(--text-muted);
+    font-size:16px;
+    padding:4px 6px;
+  }
+  .hist-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:12.5px;
+    padding:8px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .hist-row:last-child{border-bottom:none;}
+  .hist-left{color:var(--text-secondary);}
+  .hist-left b{color:var(--text);font-weight:600;}
+  .amt-pos{color:var(--success);font-weight:700;}
+  .amt-neg{color:var(--text);font-weight:700;}
+  .cat-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:13.5px;
+    padding:8px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .cat-row:last-child{border-bottom:none;}
+  .prod-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:8px;
+  }
+  .backup-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .order-card{
+    background:var(--surface);
+    border-radius:14px;
+    padding:11px 14px;
+    margin-bottom:8px;
+    border:1.5px solid var(--border);
+  }
+  .order-card.urgent{border-color:var(--danger);}
+  .fijo-tag{
+    display:inline-block;
+    font-size:10px;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:6px;
+    background:var(--accent-light);
+    color:var(--accent);
+    margin-left:6px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>💰 Mi Control de Gastos</h1>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-resumen">Resumen</button>
+    <button class="tab-btn" id="tab-tarjetas">Tarjetas</button>
+    <button class="tab-btn" id="tab-movs">Movimientos</button>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="view active" id="view-resumen">
+    <div class="grid2">
+      <div class="stat-card">
+        <p class="stat-label">Dinero disponible</p>
+        <p class="stat-value" id="stat-disponible">$0</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Deuda total</p>
+        <p class="stat-value danger" id="stat-deuda">$0</p>
+        <p class="stat-sub" id="stat-deuda-diferido"></p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Ganado este mes</p>
+        <p class="stat-value success" id="stat-ganado">$0</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Gastado este mes</p>
+        <p class="stat-value" id="stat-gastado">$0</p>
+      </div>
+    </div>
+
+    <div class="stat-card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="font-size:13px;color:var(--text-secondary);">Balance neto del mes</span>
+      <span style="font-size:15px;font-weight:700;" id="stat-neto">$0</span>
+    </div>
+    <div class="stat-card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="font-size:13px;color:var(--text-secondary);">Pagado a tarjetas este mes</span>
+      <span style="font-size:15px;font-weight:700;" id="stat-pagado-tarjetas">$0</span>
+    </div>
+    <div class="grid2">
+      <div class="stat-card">
+        <p class="stat-label">Gastos fijos (mes)</p>
+        <p class="stat-value" id="stat-fijos" style="font-size:16px;">$0</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Gastos variables (mes)</p>
+        <p class="stat-value" id="stat-variables" style="font-size:16px;">$0</p>
+      </div>
+    </div>
+
+    <p class="section-title">Orden sugerido de pago</p>
+    <div id="orden-resumen"></div>
+    <p class="empty-msg" id="empty-orden-resumen" style="display:none;">Agrega fecha límite de pago a tus tarjetas en la pestaña Tarjetas para ver aquí el orden.</p>
+
+    <p class="section-title">Ganancia por producto</p>
+    <div id="producto-list"></div>
+    <p class="empty-msg" id="empty-producto" style="display:none;">Cuando uses el mismo nombre de producto en una inversión y su venta, aquí verás la ganancia.</p>
+
+    <p class="section-title">Gastos por categoría (este mes)</p>
+    <div id="cat-list"></div>
+    <p class="empty-msg" id="empty-cat" style="display:none;">Aún no hay gastos este mes.</p>
+  </div>
+
+  <!-- TARJETAS -->
+  <div class="view" id="view-tarjetas">
+    <div class="stat-card" style="margin-bottom:16px;">
+      <label>Dinero disponible (efectivo + cuenta)</label>
+      <input type="number" id="input-disponible" placeholder="0" />
+      <button class="btn-primary" style="margin-top:10px;" id="btn-guardar-disponible">Guardar</button>
+    </div>
+
+    <p class="section-title">Agregar tarjeta</p>
+    <div class="field-group"><input type="text" id="card-nombre" placeholder="Nombre (ej. BBVA Oro)" /></div>
+    <div class="field-group"><input type="number" id="card-debe" placeholder="Deuda total" /></div>
+    <div class="field-group"><input type="number" id="card-diferido" placeholder="De eso, cuánto está a meses (opcional)" /></div>
+    <div class="field-group"><input type="number" id="card-limite" placeholder="Límite de crédito (opcional)" /></div>
+    <div class="grid2" style="margin-bottom:10px;">
+      <div><label>Fecha de corte</label><input type="date" id="card-corte" /></div>
+      <div><label>Fecha límite de pago</label><input type="date" id="card-fecha" /></div>
+    </div>
+    <p class="error-msg" id="card-error"></p>
+    <button class="btn-primary" id="btn-add-card">Agregar tarjeta</button>
+    <p class="hint">Para abonar a una tarjeta, ve a Movimientos → Gasto → categoría "Pago a tarjeta".</p>
+
+    <p class="section-title">Orden sugerido de pago</p>
+    <div id="orden-tarjetas"></div>
+    <p class="empty-msg" id="empty-orden-tarjetas" style="display:none;">Agrega fecha límite de pago para ver el orden aquí.</p>
+
+    <p class="section-title">Todas tus tarjetas</p>
+    <div id="cards-list"></div>
+
+    <p class="section-title">Respaldo</p>
+    <div class="backup-row">
+      <button class="btn-secondary" id="btn-export">⬇ Exportar datos</button>
+      <button class="btn-secondary" id="btn-import-trigger">⬆ Importar datos</button>
+      <input type="file" id="input-import" accept=".json" style="display:none;" />
+    </div>
+    <p class="hint">Exporta de vez en cuando para tener un respaldo, o para pasar tus datos a otro dispositivo.</p>
+  </div>
+
+  <!-- MOVIMIENTOS -->
+  <div class="view" id="view-movs">
+    <div class="type-toggle">
+      <button class="type-btn gasto-active" id="btn-tipo-gasto">Gasto</button>
+      <button class="type-btn" id="btn-tipo-ingreso">Venta / ingreso</button>
+    </div>
+
+    <div class="field-group"><input type="date" id="mov-fecha" /></div>
+    <div class="field-group"><select id="mov-categoria"></select></div>
+    <div class="field-group" id="wrap-producto"><input type="text" id="mov-producto" placeholder="Producto (ej. Audífonos)" /></div>
+    <div class="field-group" id="wrap-tarjeta-pago"><select id="mov-tarjeta-pago"></select></div>
+    <div class="field-group" id="wrap-metodo">
+      <select id="mov-metodo">
+        <option value="Efectivo">Efectivo</option>
+        <option value="Débito">Débito</option>
+        <option value="Tarjeta de crédito">Tarjeta de crédito</option>
+      </select>
+    </div>
+    <div class="field-group" id="wrap-tarjeta-credito"><select id="mov-tarjeta-credito"></select></div>
+    <div class="checkbox-row" id="wrap-fijo">
+      <input type="checkbox" id="mov-fijo" />
+      <label style="margin:0;" for="mov-fijo">Es un gasto fijo (se repite cada mes)</label>
+    </div>
+    <div class="field-group"><input type="text" id="mov-desc" placeholder="Descripción" /></div>
+    <div class="field-group"><input type="number" id="mov-monto" placeholder="Monto" /></div>
+    <p class="error-msg" id="mov-error"></p>
+    <button class="btn-primary" id="btn-add-mov">Agregar</button>
+    <p class="hint">Si pagas con tarjeta de crédito, ese monto se suma a la deuda de esa tarjeta en vez de restarse de tu disponible.</p>
+
+    <p class="section-title">Historial reciente</p>
+    <div id="movs-list"></div>
+    <p class="empty-msg" id="empty-movs" style="display:none;">Aún no has registrado movimientos.</p>
+  </div>
+</div>
+
+<script>
+let data = { disponible: 0, cards: [], movimientos: [] };
+let tipoActual = 'gasto';
+const STORAGE_KEY = 'control-gastos-data';
+
+const CATS_GASTO = ["Inversión / producto","Pago a tarjeta","Comida","Restaurantes","Gasolina","Transporte","Renta/Servicios","Entretenimiento","Salidas con amigos","Salud","Compras","Otro"];
+const CATS_INGRESO = ["Venta de producto","Otro negocio / ingreso"];
+const CATS_CON_PRODUCTO = ["Inversión / producto","Venta de producto"];
+const CAT_PAGO_TARJETA = "Pago a tarjeta";
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function fmt(n){ return '$' + Number(n||0).toLocaleString('es-MX',{maximumFractionDigits:2}); }
+function diasRestantes(fechaStr){
+  const hoy = new Date(todayStr()+'T00:00:00');
+  const f = new Date(fechaStr+'T00:00:00');
+  return Math.round((f-hoy)/(1000*60*60*24));
+}
+
+/* ---------- persistence ---------- */
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) data = JSON.parse(raw);
+  }catch(e){ console.error('load error', e); }
+  if(!data.movimientos) data.movimientos = data.gastos || [];
+  if(!data.cards) data.cards = [];
+}
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  catch(e){ console.error('save error', e); }
+}
+
+/* ---------- tabs ---------- */
+function showTab(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='movs') updateCamposEspeciales();
+}
+document.getElementById('tab-resumen').onclick = ()=>showTab('resumen');
+document.getElementById('tab-tarjetas').onclick = ()=>showTab('tarjetas');
+document.getElementById('tab-movs').onclick = ()=>showTab('movs');
+
+/* ---------- movement form ---------- */
+function populateTarjetaSelects(){
+  const opts = '<option value="">Selecciona tarjeta</option>' + data.cards.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  document.getElementById('mov-tarjeta-pago').innerHTML = opts;
+  document.getElementById('mov-tarjeta-credito').innerHTML = opts;
+}
+
+function updateCamposEspeciales(){
+  const cat = document.getElementById('mov-categoria').value;
+  const metodo = document.getElementById('mov-metodo').value;
+  const esGasto = tipoActual === 'gasto';
+  const esPagoTarjeta = esGasto && cat === CAT_PAGO_TARJETA;
+  const conProducto = CATS_CON_PRODUCTO.includes(cat);
+
+  document.getElementById('wrap-producto').style.display = conProducto ? 'block' : 'none';
+  document.getElementById('wrap-tarjeta-pago').style.display = esPagoTarjeta ? 'block' : 'none';
+  document.getElementById('wrap-metodo').style.display = (esGasto && !esPagoTarjeta) ? 'block' : 'none';
+  document.getElementById('wrap-fijo').style.display = (esGasto && !esPagoTarjeta) ? 'flex' : 'none';
+  const mostrarTarjetaCredito = esGasto && !esPagoTarjeta && metodo === 'Tarjeta de crédito';
+  document.getElementById('wrap-tarjeta-credito').style.display = mostrarTarjetaCredito ? 'block' : 'none';
+
+  if(esPagoTarjeta || !esGasto) populateTarjetaSelects();
+  if(mostrarTarjetaCredito) populateTarjetaSelects();
+}
+
+function setTipo(t){
+  tipoActual = t;
+  document.getElementById('btn-tipo-gasto').classList.toggle('gasto-active', t==='gasto');
+  document.getElementById('btn-tipo-ingreso').classList.toggle('ingreso-active', t==='ingreso');
+  const sel = document.getElementById('mov-categoria');
+  const cats = t==='gasto' ? CATS_GASTO : CATS_INGRESO;
+  sel.innerHTML = cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('mov-monto').placeholder = t==='gasto' ? 'Cuánto gastaste/invertiste' : 'Cuánto ganaste';
+  updateCamposEspeciales();
+}
+document.getElementById('btn-tipo-gasto').onclick = ()=>setTipo('gasto');
+document.getElementById('btn-tipo-ingreso').onclick = ()=>setTipo('ingreso');
+document.getElementById('mov-categoria').addEventListener('change', updateCamposEspeciales);
+document.getElementById('mov-metodo').addEventListener('change', updateCamposEspeciales);
+
+document.getElementById('btn-add-mov').onclick = ()=>{
+  const fecha = document.getElementById('mov-fecha').value;
+  const categoria = document.getElementById('mov-categoria').value;
+  const desc = document.getElementById('mov-desc').value.trim();
+  const monto = parseFloat(document.getElementById('mov-monto').value);
+  const err = document.getElementById('mov-error');
+  const esPagoTarjeta = tipoActual==='gasto' && categoria===CAT_PAGO_TARJETA;
+  const producto = CATS_CON_PRODUCTO.includes(categoria) ? document.getElementById('mov-producto').value.trim() : '';
+  const metodo = (tipoActual==='gasto' && !esPagoTarjeta) ? document.getElementById('mov-metodo').value : '';
+  const esFijo = (tipoActual==='gasto' && !esPagoTarjeta) ? document.getElementById('mov-fijo').checked : null;
+
+  if(!fecha || isNaN(monto) || monto<=0){
+    err.textContent = 'Pon la fecha y un monto válido.';
+    err.style.display = 'block';
+    return;
+  }
+
+  let tarjetaId='', tarjetaNombre='';
+  if(esPagoTarjeta){
+    tarjetaId = document.getElementById('mov-tarjeta-pago').value;
+    if(!tarjetaId){ err.textContent='Selecciona a qué tarjeta corresponde el pago.'; err.style.display='block'; return; }
+  } else if(metodo === 'Tarjeta de crédito'){
+    tarjetaId = document.getElementById('mov-tarjeta-credito').value;
+    if(!tarjetaId){ err.textContent='Selecciona con qué tarjeta pagaste.'; err.style.display='block'; return; }
+  }
+  if(tarjetaId){
+    const card = data.cards.find(c=>c.id===tarjetaId);
+    if(card) tarjetaNombre = card.nombre;
+  }
+
+  err.style.display='none';
+  data.movimientos.unshift({ id:Date.now().toString(), fecha, categoria, producto, tarjetaId, tarjetaNombre, metodo, esFijo, desc, monto, tipo:tipoActual });
+
+  if(tipoActual==='ingreso'){
+    data.disponible = (data.disponible||0) + monto;
+  } else if(esPagoTarjeta){
+    data.disponible = (data.disponible||0) - monto;
+    const card = data.cards.find(c=>c.id===tarjetaId);
+    if(card) card.debe = (card.debe||0) - monto;
+  } else if(metodo==='Tarjeta de crédito'){
+    const card = data.cards.find(c=>c.id===tarjetaId);
+    if(card) card.debe = (card.debe||0) + monto;
+  } else {
+    data.disponible = (data.disponible||0) - monto;
+  }
+
+  document.getElementById('mov-producto').value='';
+  document.getElementById('mov-desc').value='';
+  document.getElementById('mov-monto').value='';
+  document.getElementById('mov-fijo').checked=false;
+  save();
+  render();
+};
+
+/* ---------- cards ---------- */
+document.getElementById('btn-guardar-disponible').onclick = ()=>{
+  const v = parseFloat(document.getElementById('input-disponible').value);
+  data.disponible = isNaN(v) ? 0 : v;
+  save(); render();
+};
+
+document.getElementById('btn-add-card').onclick = ()=>{
+  const nombre = document.getElementById('card-nombre').value.trim();
+  const debe = parseFloat(document.getElementById('card-debe').value);
+  const diferido = parseFloat(document.getElementById('card-diferido').value);
+  const limite = parseFloat(document.getElementById('card-limite').value);
+  const corte = document.getElementById('card-corte').value;
+  const fecha = document.getElementById('card-fecha').value;
+  const err = document.getElementById('card-error');
+  if(!nombre || isNaN(debe)){
+    err.textContent='Escribe el nombre y la deuda total.';
+    err.style.display='block';
+    return;
+  }
+  err.style.display='none';
+  data.cards.push({ id:Date.now().toString(), nombre, debe, diferido:isNaN(diferido)?0:diferido, limite:isNaN(limite)?null:limite, corte:corte||null, fecha:fecha||null });
+  ['card-nombre','card-debe','card-diferido','card-limite','card-corte','card-fecha'].forEach(id=>document.getElementById(id).value='');
+  save(); render();
+};
+
+function removeCard(id){
+  data.cards = data.cards.filter(c=>c.id!==id);
+  save(); render();
+}
+function removeMov(id){
+  const item = data.movimientos.find(g=>g.id===id);
+  if(item){
+    if(item.tipo==='ingreso'){
+      data.disponible = (data.disponible||0) - item.monto;
+    } else if(item.categoria===CAT_PAGO_TARJETA){
+      data.disponible = (data.disponible||0) + item.monto;
+      const card = data.cards.find(c=>c.id===item.tarjetaId);
+      if(card) card.debe = (card.debe||0) + item.monto;
+    } else if(item.metodo==='Tarjeta de crédito'){
+      const card = data.cards.find(c=>c.id===item.tarjetaId);
+      if(card) card.debe = (card.debe||0) - item.monto;
+    } else {
+      data.disponible = (data.disponible||0) + item.monto;
+    }
+  }
+  data.movimientos = data.movimientos.filter(g=>g.id!==id);
+  save(); render();
+}
+window.removeCard = removeCard;
+window.removeMov = removeMov;
+
+/* ---------- export / import ---------- */
+document.getElementById('btn-export').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'control-de-gastos-' + todayStr() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+document.getElementById('btn-import-trigger').onclick = ()=>document.getElementById('input-import').click();
+document.getElementById('input-import').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const imported = JSON.parse(evt.target.result);
+      if(imported && typeof imported === 'object'){
+        data = {
+          disponible: imported.disponible || 0,
+          cards: imported.cards || [],
+          movimientos: imported.movimientos || imported.gastos || []
+        };
+        save();
+        render();
+        alert('Datos importados correctamente.');
+      }
+    }catch(err){
+      alert('El archivo no es válido.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ---------- render ---------- */
+function renderOrdenPago(targetId, emptyId){
+  const cardsConFecha = data.cards.filter(c=>c.fecha).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
+  document.getElementById(emptyId).style.display = cardsConFecha.length ? 'none' : 'block';
+  document.getElementById(targetId).innerHTML = cardsConFecha.map((c,i)=>{
+    const dias = diasRestantes(c.fecha);
+    const debeEsteMes = c.debe - (c.diferido||0);
+    const urgente = dias<=5;
+    const diasTxt = dias<0 ? `venció hace ${Math.abs(dias)} días` : dias===0 ? 'vence hoy' : `en ${dias} días`;
+    return `<div class="order-card ${urgente?'urgent':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:var(--text-secondary);">#${i+1} · ${c.nombre}</span>
+        <span style="font-size:11.5px;color:${urgente?'var(--danger)':'var(--text-secondary)'};font-weight:600;">${diasTxt}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-top:4px;">
+        <span>${c.corte?'Corte '+c.corte+' · ':''}Pago límite ${c.fecha}</span>
+        <span style="font-weight:700;color:var(--text);">${fmt(debeEsteMes)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function render(){
+  document.getElementById('input-disponible').value = data.disponible || '';
+  document.getElementById('stat-disponible').textContent = fmt(data.disponible);
+
+  const deudaTotal = data.cards.reduce((s,c)=>s+(c.debe||0),0);
+  const diferidoTotal = data.cards.reduce((s,c)=>s+(c.diferido||0),0);
+  document.getElementById('stat-deuda').textContent = fmt(deudaTotal);
+  document.getElementById('stat-deuda-diferido').textContent = diferidoTotal>0
+    ? `de eso, ${fmt(diferidoTotal)} está a meses · debes ${fmt(deudaTotal-diferidoTotal)} este mes` : '';
+
+  const hoy = todayStr();
+  const mesActual = hoy.slice(0,7);
+  const movMes = data.movimientos.filter(g=>g.fecha && g.fecha.slice(0,7)===mesActual);
+  const gastosMes = movMes.filter(g=>(g.tipo||'gasto')==='gasto');
+  const ingresosMes = movMes.filter(g=>g.tipo==='ingreso');
+  const totalGastado = gastosMes.reduce((s,g)=>s+g.monto,0);
+  const totalGanado = ingresosMes.reduce((s,g)=>s+g.monto,0);
+  document.getElementById('stat-gastado').textContent = fmt(totalGastado);
+  document.getElementById('stat-ganado').textContent = fmt(totalGanado);
+  const neto = document.getElementById('stat-neto');
+  neto.textContent = fmt(totalGanado-totalGastado);
+  neto.style.color = (totalGanado-totalGastado)>=0 ? 'var(--success)' : 'var(--danger)';
+
+  const pagadoTarjetas = gastosMes.filter(g=>g.categoria===CAT_PAGO_TARJETA).reduce((s,g)=>s+g.monto,0);
+  document.getElementById('stat-pagado-tarjetas').textContent = fmt(pagadoTarjetas);
+
+  const fijosMes = gastosMes.filter(g=>g.esFijo===true).reduce((s,g)=>s+g.monto,0);
+  const variablesMes = gastosMes.filter(g=>g.esFijo===false).reduce((s,g)=>s+g.monto,0);
+  document.getElementById('stat-fijos').textContent = fmt(fijosMes);
+  document.getElementById('stat-variables').textContent = fmt(variablesMes);
+
+  renderOrdenPago('orden-resumen','empty-orden-resumen');
+  renderOrdenPago('orden-tarjetas','empty-orden-tarjetas');
+
+  const prodMap = {};
+  data.movimientos.forEach(g=>{
+    if(!CATS_CON_PRODUCTO.includes(g.categoria)) return;
+    const key = (g.producto||'').trim().toLowerCase();
+    if(!key) return;
+    if(!prodMap[key]) prodMap[key] = {nombre:g.producto.trim(), invertido:0, vendido:0};
+    if((g.tipo||'gasto')==='gasto') prodMap[key].invertido += g.monto;
+    else prodMap[key].vendido += g.monto;
+  });
+  const prodEntries = Object.values(prodMap).sort((a,b)=>(b.vendido-b.invertido)-(a.vendido-a.invertido));
+  document.getElementById('empty-producto').style.display = prodEntries.length ? 'none':'block';
+  document.getElementById('producto-list').innerHTML = prodEntries.map(p=>{
+    const ganancia = p.vendido - p.invertido;
+    return `<div class="prod-card">
+      <p style="font-weight:700;font-size:13.5px;margin:0 0 4px;">${p.nombre}</p>
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-secondary);margin-bottom:4px;">
+        <span>Invertido ${fmt(p.invertido)}</span><span>Vendido ${fmt(p.vendido)}</span>
+      </div>
+      <p style="font-size:14px;font-weight:700;margin:0;color:${ganancia>=0?'var(--success)':'var(--danger)'};">${ganancia>=0?'Ganancia':'Pérdida'}: ${fmt(Math.abs(ganancia))}</p>
+    </div>`;
+  }).join('');
+
+  const catMap = {};
+  gastosMes.forEach(g=>{ catMap[g.categoria]=(catMap[g.categoria]||0)+g.monto; });
+  const catEntries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('empty-cat').style.display = catEntries.length ? 'none':'block';
+  document.getElementById('cat-list').innerHTML = catEntries.map(([cat,amt])=>`
+    <div class="cat-row"><span>${cat}</span><span style="font-weight:700;">${fmt(amt)}</span></div>`).join('');
+
+  document.getElementById('cards-list').innerHTML = data.cards.length ? data.cards.map(c=>{
+    const tieneDiferido = (c.diferido||0)>0;
+    const debeEsteMes = c.debe - (c.diferido||0);
+    return `<div class="row-card" style="flex-direction:column;align-items:stretch;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <p style="font-weight:700;font-size:14px;margin:0;">${c.nombre}</p>
+          <p style="font-size:11.5px;color:var(--text-secondary);margin:2px 0 0;">${c.limite?'Límite '+fmt(c.limite):''}${c.corte?(c.limite?' · ':'')+'Corte '+c.corte:''}${c.fecha?' · Pago '+c.fecha:''}</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-weight:700;color:var(--danger);">${fmt(c.debe)}</span>
+          <button class="icon-btn" onclick="removeCard('${c.id}')">✕</button>
+        </div>
+      </div>
+      ${tieneDiferido?`<p style="font-size:11px;color:var(--text-muted);margin:6px 0 0;">Debes este mes: ${fmt(debeEsteMes)} · A meses: ${fmt(c.diferido)}</p>`:''}
+    </div>`;
+  }).join('') : '<p class="empty-msg">Aún no has agregado tarjetas.</p>';
+
+  const movsList = document.getElementById('movs-list');
+  document.getElementById('empty-movs').style.display = data.movimientos.length ? 'none':'block';
+  movsList.innerHTML = data.movimientos.slice(0,25).map(g=>{
+    const esIngreso = g.tipo==='ingreso';
+    const partes = [g.categoria];
+    if(g.tarjetaNombre) partes.push(g.tarjetaNombre);
+    else if(g.producto) partes.push(g.producto);
+    if(g.metodo) partes.push(g.metodo);
+    if(g.desc) partes.push(g.desc);
+    const fijoTag = g.esFijo===true ? '<span class="fijo-tag">FIJO</span>' : '';
+    return `<div class="hist-row">
+      <div class="hist-left"><b>${g.fecha}</b> · ${partes.join(' · ')}${fijoTag}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="${esIngreso?'amt-pos':'amt-neg'}">${esIngreso?'+':'-'}${fmt(g.monto)}</span>
+        <button class="icon-btn" onclick="removeMov('${g.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- init ---------- */
+load();
+document.getElementById('mov-fecha').value = todayStr();
+setTipo('gasto');
+render();
+</script>
+</body>
+</html>
